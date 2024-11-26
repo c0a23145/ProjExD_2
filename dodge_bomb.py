@@ -1,3 +1,5 @@
+
+
 import os
 import sys
 import random
@@ -15,6 +17,7 @@ DELTA = {
     pg.K_RIGHT: (+5, 0),
 }
 
+
 def check_bound(rct: pg.Rect) -> tuple[bool, bool]:
     """
     画面内または画面外の判定を行う
@@ -30,6 +33,7 @@ def check_bound(rct: pg.Rect) -> tuple[bool, bool]:
     if rct.top < 0 or rct.bottom > HEIGHT:
         Tate = False
     return Yoko, Tate
+
 
 def game_over(screen: pg.Surface) -> None:
     """
@@ -57,6 +61,7 @@ def game_over(screen: pg.Surface) -> None:
     pg.display.update()
     time.sleep(5)
 
+
 def init_bb_imgs() -> tuple[list[pg.Surface], list[int]]:
     """
     爆弾のサイズ別Surfaceリストと加速度リストを生成する。
@@ -74,8 +79,9 @@ def init_bb_imgs() -> tuple[list[pg.Surface], list[int]]:
         pg.draw.circle(bb_img, (255, 0, 0), (10 * r, 10 * r), 10 * r)  # 赤い円を描画
         bb_imgs.append(bb_img)
         
-    return bb_imgs, bb_accs
-    
+    return bb_imgs, bb_accs   
+
+
 def get_kk_img(sum_mv: tuple[int, int]) -> pg.Surface:
     """
     移動量の合計値タプルに対応する向きの画像Surfaceを返す関数。
@@ -99,6 +105,7 @@ def get_kk_img(sum_mv: tuple[int, int]) -> pg.Surface:
     kk_img_dict[(0, -5)] = pg.transform.rotozoom(kk_img, 180, 0.9)  # 上に移動
 
     return kk_img_dict.get(tuple(sum_mv), kk_img_dict[(0, 0)])  # 移動量に応じた画像を返す
+
 
 def main():
     pg.display.set_caption("逃げろ！こうかとん")
@@ -174,6 +181,7 @@ def main():
 
         tmr += 1
         clock.tick(50)
+
 
 if __name__ == "__main__":
     pg.init()
