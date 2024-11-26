@@ -15,13 +15,20 @@ DELTA = {
 }
 
 def check_bound(rct: pg.Rect) -> tuple[bool, bool]:
-    Yoko, Tate=True, True
-    if rct.left <0 or WIDTH < rct.right: 
+    """
+    画面内または画面外の判定を行う
+    引数:
+        rct (pg.Rect): 判定対象の矩形
+    戻り値:
+        (横方向, 縦方向)の真理値タプル
+        (True: 画面内, False: 画面外)
+    """
+    Yoko, Tate = True, True
+    if rct.left < 0 or rct.right > WIDTH:
         Yoko = False
-   
-    if rct.top <0 or HEIGHT < rct.bottom: 
+    if rct.top < 0 or rct.bottom > HEIGHT:
         Tate = False
-        return Yoko, Tate
+    return Yoko, Tate
 
 def main():
     pg.display.set_caption("逃げろ！こうかとん")
@@ -41,18 +48,17 @@ def main():
     clock = pg.time.Clock()
     tmr = 0
 
-
-    
-
     while True:
         for event in pg.event.get():
-            if event.type == pg.QUIT: 
+            if event.type == pg.QUIT:
                 return
-        #if kk_rct.colliderect(bb_rct):
-         #   print("ゲームオーバー")
-          #  return #げーむオーバー
-        screen.blit(bg_img, [0, 0]) 
+        if kk_rct.colliderect(bb_rct):
+            print("ゲームオーバー")
+            return  # ゲームオーバー
 
+        screen.blit(bg_img, [0, 0])
+
+        # こうかとんの移動処理
         key_lst = pg.key.get_pressed()
         sum_mv = [0, 0]
         for key, delta in DELTA.items():
@@ -61,21 +67,22 @@ def main():
                 sum_mv[1] += delta[1]
         
         kk_rct.move_ip(sum_mv)
-     
-        if check_bound(kk_rct) != (True, True):
+        if check_bound(kk_rct) != (True, True):  # 画面外なら元に戻す
             kk_rct.move_ip(-sum_mv[0], -sum_mv[1])
 
-        bb_rct.move_ip(vx, vy)  # 爆弾動く
+        # 爆弾の移動処理
+        bb_rct.move_ip(vx, vy)
         Yoko, Tate = check_bound(bb_rct)
-        if not Yoko:  # 横にはみ出てる
-            vx *= -1
-        if not Tate:  # 縦にはみ出てる
-            vy *= -1
+        if not Yoko:
+            vx *= -1  # 横方向の反転
+        if not Tate:
+            vy *= -1  # 縦方向の反転
 
-        bb_rct.move_ip(vx, vy) # 爆弾の移動
+        # 描画
         screen.blit(kk_img, kk_rct)
         screen.blit(bb_img, bb_rct)
         pg.display.update()
+
         tmr += 1
         clock.tick(50)
 
@@ -84,4 +91,4 @@ if __name__ == "__main__":
     pg.init()
     main()
     pg.quit()
-    sys.exit()
+    sys.exit()  
