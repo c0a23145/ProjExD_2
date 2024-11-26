@@ -30,6 +30,7 @@ def check_bound(rct: pg.Rect) -> tuple[bool, bool]:
     if rct.top < 0 or rct.bottom > HEIGHT:
         Tate = False
     return Yoko, Tate
+
 def game_over(screen: pg.Surface) -> None:
     """
     ゲームオーバー画面を表示する関数。
@@ -49,8 +50,8 @@ def game_over(screen: pg.Surface) -> None:
 
     cry_kk_img = pg.transform.rotozoom(pg.image.load("fig/8.png"), 0, 0.9)
     cry_kk_img2 = pg.transform.rotozoom(pg.image.load("fig/8.png"), 0, 0.9)
-    cry_kk_rect = cry_kk_img.get_rect(center=(WIDTH // 2+200, HEIGHT // 2))
-    cry_kk_rect2 = cry_kk_img2.get_rect(center=(WIDTH // 2-200, HEIGHT // 2))
+    cry_kk_rect = cry_kk_img.get_rect(center=(WIDTH // 2 + 200, HEIGHT // 2))
+    cry_kk_rect2 = cry_kk_img2.get_rect(center=(WIDTH // 2 - 200, HEIGHT // 2))
     screen.blit(cry_kk_img, cry_kk_rect)
     screen.blit(cry_kk_img2, cry_kk_rect2)
     pg.display.update()
@@ -69,14 +70,35 @@ def init_bb_imgs() -> tuple[list[pg.Surface], list[int]]:
     bb_accs = [a for a in range(1, 11)]  # 加速度リスト
 
     for r in range(1, 11):
-        bb_img = pg.Surface(20 * r, 20 * r)  # サイズ変更対応
+        bb_img = pg.Surface((20 * r, 20 * r), pg.SRCALPHA)  # サイズ変更対応
         pg.draw.circle(bb_img, (255, 0, 0), (10 * r, 10 * r), 10 * r)  # 赤い円を描画
         bb_imgs.append(bb_img)
         
-
     return bb_imgs, bb_accs
     
-    
+def get_kk_img(sum_mv: tuple[int, int]) -> pg.Surface:
+    """
+    移動量の合計値タプルに対応する向きの画像Surfaceを返す関数。
+
+    引数:
+        sum_mv (tuple[int, int]): こうかとんの移動量（x, y）
+
+    戻り値:
+        pg.Surface: 指定された移動量に対応する向きの画像Surface
+    """
+    # こうかとんの基本画像
+    kk_img = pg.image.load("fig/3.png")  # こうかとんの元画像
+    kk_img_invarted = pg.transform.flip(kk_img, True, False)
+    kk_img_dict = {}
+
+    # 移動方向に応じた画像を準備
+    kk_img_dict[(0, 0)] = pg.transform.rotozoom(kk_img, 0, 0.9)  # 停止中
+    kk_img_dict[(5, 0)] = pg.transform.rotozoom(kk_img, -90, 0.9)  # 右に移動
+    kk_img_dict[(0, 5)] = pg.transform.rotozoom(kk_img, 0, 0.9)  # 下に移動
+    kk_img_dict[(-5, 0)] = pg.transform.rotozoom(kk_img, 90, 0.9)  # 左に移動
+    kk_img_dict[(0, -5)] = pg.transform.rotozoom(kk_img, 180, 0.9)  # 上に移動
+
+    return kk_img_dict.get(tuple(sum_mv), kk_img_dict[(0, 0)])  # 移動量に応じた画像を返す
 
 def main():
     pg.display.set_caption("逃げろ！こうかとん")
@@ -86,26 +108,24 @@ def main():
     kk_rct = kk_img.get_rect()
     kk_rct.center = 900, 400
 
-    bb_img = pg.Surface(20, 20) #爆弾イメージ
+    bb_img = pg.Surface((20, 20), pg.SRCALPHA)  # 爆弾イメージ
     pg.draw.circle(bb_img, (255, 0, 0), (10, 10), 10)  # 赤い円を描画
     bb_rct = bb_img.get_rect()
     bb_rct.center = random.randint(0, WIDTH), random.randint(0, HEIGHT)  # ランダム配置
+
     # 爆弾の速度
-    vx=5
-    vy=5
+    vx = 5
+    vy = 5
     clock = pg.time.Clock()
     tmr = 0
 
     while True:
-        
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 return
         if kk_rct.colliderect(bb_rct):
             game_over(screen)
             return
-           
-
 
         screen.blit(bg_img, [0, 0])
 
@@ -116,6 +136,9 @@ def main():
             if key_lst[key]:
                 sum_mv[0] += delta[0]
                 sum_mv[1] += delta[1]
+
+        kk_img = get_kk_img(sum_mv)
+        kk_rct = kk_img.get_rect(center=kk_rct.center)
         
         kk_rct.move_ip(sum_mv)
         if check_bound(kk_rct) != (True, True):  # 画面外なら元に戻す
@@ -130,34 +153,30 @@ def main():
             vy *= -1  # 縦方向の反転
 
         bb_imgs, bb_accs = init_bb_imgs() 
-        avx = vx*bb_accs[min(tmr//500, 9)] 
-        avy = vy*bb_accs[min(tmr//500, 9)] 
-        bb_img = bb_imgs[min(tmr//500, 9)]
+        avx = vx * bb_accs[min(tmr // 500, 9)] 
+        avy = vy * bb_accs[min(tmr // 500, 9)] 
+        bb_img = bb_imgs[min(tmr // 500, 9)]
         bb_rct.width = bb_img.get_rect().width
         bb_rct.height = bb_img.get_rect().height
-
 
         bb_rct.move_ip(avx, avy)
         Yoko, Tate = check_bound(bb_rct)
         if not Yoko:
             avx *= -1  # 横方向の反転
         if not Tate:
-            avy *= -1  #
-
+            avy *= -1  # 縦方向の反転
 
         # 描画
         screen.blit(kk_img, kk_rct)
         screen.blit(bb_img, bb_rct)
-        #game_over(screen)
 
         pg.display.update()
 
         tmr += 1
         clock.tick(50)
 
-
 if __name__ == "__main__":
     pg.init()
     main()
     pg.quit()
-    sys.exit()  
+    sys.exit()
