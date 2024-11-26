@@ -14,6 +14,15 @@ DELTA = {
     pg.K_RIGHT: (+5, 0),
 }
 
+def check_bound(rct: pg.Rect) -> tuple[bool, bool]:
+    Yoko, Tate=True, True
+    if rct.left <0 or WIDTH < rct.right: 
+        Yoko = False
+   
+    if rct.top <0 or HEIGHT < rct.bottom: 
+        Tate = False
+        return Yoko, Tate
+
 def main():
     pg.display.set_caption("逃げろ！こうかとん")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
@@ -27,14 +36,21 @@ def main():
     bb_rct = bb_img.get_rect()
     bb_rct.center = random.randint(0, WIDTH), random.randint(0, HEIGHT)  # ランダム配置
     # 爆弾の速度
-    vx, vy = 5, 5
-
+    vx=5
+    vy=5
     clock = pg.time.Clock()
     tmr = 0
+
+
+    
+
     while True:
         for event in pg.event.get():
             if event.type == pg.QUIT: 
                 return
+        #if kk_rct.colliderect(bb_rct):
+         #   print("ゲームオーバー")
+          #  return #げーむオーバー
         screen.blit(bg_img, [0, 0]) 
 
         key_lst = pg.key.get_pressed()
@@ -43,17 +59,20 @@ def main():
             if key_lst[key]:
                 sum_mv[0] += delta[0]
                 sum_mv[1] += delta[1]
-
-         # 爆弾の移動
-        bb_rct.move_ip(vx, vy)
-
-        # 画面端で跳ね返る処理
-        if bb_rct.left < 0 or bb_rct.right > WIDTH:
-            vx = -vx
-        if bb_rct.top < 0 or bb_rct.bottom > HEIGHT:
-            vy = -vy
-
+        
         kk_rct.move_ip(sum_mv)
+     
+        if check_bound(kk_rct) != (True, True):
+            kk_rct.move_ip(-sum_mv[0], -sum_mv[1])
+
+        bb_rct.move_ip(vx, vy)  # 爆弾動く
+        Yoko, Tate = check_bound(bb_rct)
+        if not Yoko:  # 横にはみ出てる
+            vx *= -1
+        if not Tate:  # 縦にはみ出てる
+            vy *= -1
+
+        bb_rct.move_ip(vx, vy) # 爆弾の移動
         screen.blit(kk_img, kk_rct)
         screen.blit(bb_img, bb_rct)
         pg.display.update()
