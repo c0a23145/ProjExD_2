@@ -55,6 +55,26 @@ def game_over(screen: pg.Surface) -> None:
     screen.blit(cry_kk_img2, cry_kk_rect2)
     pg.display.update()
     time.sleep(5)
+
+def init_bb_imgs() -> tuple[list[pg.Surface], list[int]]:
+    """
+    爆弾のサイズ別Surfaceリストと加速度リストを生成する。
+
+    戻り値:
+        tuple[list[pg.Surface], list[int]]: 
+            - 爆弾のサイズ別Surfaceリスト
+            - 加速度リスト
+    """
+    bb_imgs = []  # 爆弾Surfaceリスト
+    bb_accs = [a for a in range(1, 11)]  # 加速度リスト
+
+    for r in range(1, 11):
+        bb_img = pg.Surface(20 * r, 20 * r)  # サイズ変更対応
+        pg.draw.circle(bb_img, (255, 0, 0), (10 * r, 10 * r), 10 * r)  # 赤い円を描画
+        bb_imgs.append(bb_img)
+        
+
+    return bb_imgs, bb_accs
     
     
 
@@ -66,7 +86,7 @@ def main():
     kk_rct = kk_img.get_rect()
     kk_rct.center = 900, 400
 
-    bb_img = pg.Surface((20, 20), pg.SRCALPHA) #爆弾イメージ
+    bb_img = pg.Surface(20, 20) #爆弾イメージ
     pg.draw.circle(bb_img, (255, 0, 0), (10, 10), 10)  # 赤い円を描画
     bb_rct = bb_img.get_rect()
     bb_rct.center = random.randint(0, WIDTH), random.randint(0, HEIGHT)  # ランダム配置
@@ -77,6 +97,7 @@ def main():
     tmr = 0
 
     while True:
+        
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 return
@@ -107,6 +128,22 @@ def main():
             vx *= -1  # 横方向の反転
         if not Tate:
             vy *= -1  # 縦方向の反転
+
+        bb_imgs, bb_accs = init_bb_imgs() 
+        avx = vx*bb_accs[min(tmr//500, 9)] 
+        avy = vy*bb_accs[min(tmr//500, 9)] 
+        bb_img = bb_imgs[min(tmr//500, 9)]
+        bb_rct.width = bb_img.get_rect().width
+        bb_rct.height = bb_img.get_rect().height
+
+
+        bb_rct.move_ip(avx, avy)
+        Yoko, Tate = check_bound(bb_rct)
+        if not Yoko:
+            avx *= -1  # 横方向の反転
+        if not Tate:
+            avy *= -1  #
+
 
         # 描画
         screen.blit(kk_img, kk_rct)
